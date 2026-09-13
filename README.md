@@ -18,10 +18,10 @@ Wrapped in an immersive **LifeRPG gamification layer**, Oracle keeps students mo
 
 ## 🤖 The Autonomous Agent Engine (The Core Logic)
 Oracle doesn't just store calendar events; it thinks and adapts like a personal AI tutor:
-* **Diagnostic Engine:** Automatically evaluates quiz results from a synthetic LMS or question bank to flag sub-topics below mastery thresholds (e.g., scores $<60\%$).
-* **Educational RAG Pipeline:** Fetches targeted remedial learning materials (articles, video snippets, and practice sets) tailored precisely to the student's identified weaknesses.
-* **Dynamic Scheduler & Replanning Engine:** Continuously tracks calendar constraints. If a student misses a study slot or fails a quiz, Oracle instantly aborts downstream tasks, inserts remedial modules, and shifts deadlines in real-time.
-* **Agent Activity Audit Log:** A transparent developer panel displaying the agent's thought process, decisions, and manual override simulation controls for judges.
+* **Diagnostic Engine:** Automatically evaluates quiz results from a synthetic LMS or question bank to flag sub-topics below mastery thresholds (e.g., scores $<60\%$).<br>
+* **Educational RAG Pipeline:** Fetches targeted remedial learning materials (articles, video snippets, and practice sets) tailored precisely to the student's identified weaknesses.<br>
+* **Dynamic Scheduler & Replanning Engine:** Continuously tracks calendar constraints. If a student misses a study slot or fails a quiz, Oracle instantly aborts downstream tasks, inserts remedial modules, and shifts deadlines in real-time.<br>
+* **Agent Activity Audit Log:** A transparent developer panel displaying the agent's thought process, decisions, and manual override simulation controls for judges.<br>
 
 ---
 
