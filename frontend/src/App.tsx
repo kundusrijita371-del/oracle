@@ -12,6 +12,10 @@ import { AgentThoughtLogView } from './components/agent/AgentThoughtLog';
 import { QuizEngineModal } from './components/diagnostic/QuizEngineModal';
 import { JudgeDemoDeck } from './components/agent/JudgeDemoDeck';
 import { AvatarProfileSection } from './components/profile/AvatarProfileSection';
+import { FloatingLootProvider } from './components/gamification/FloatingLootManager';
+import { LevelUpOverlay } from './components/gamification/LevelUpOverlay';
+import { BossRaidExamModal } from './components/diagnostic/BossRaidExamModal';
+import { GuildMasterDialogue, GuildMasterMessage } from './components/agent/GuildMasterDialogue';
 import {
   api, StudentProfile, Campaign, Quest, CalendarBlock,
   SkillNode, RewardItem, AgentThoughtLog, DialogueInfo
@@ -40,6 +44,12 @@ export const App: React.FC = () => {
   const [quizTopic, setQuizTopic] = useState({ topic: 'Graphs', subtopic: 'Dijkstras Algorithm' });
   const [judgeDeckOpen, setJudgeDeckOpen] = useState(false);
   const [selectedRemedialSubtopic, setSelectedRemedialSubtopic] = useState<string | undefined>(undefined);
+
+  // RPG Boss & Level-Up Modals
+  const [bossModalOpen, setBossModalOpen] = useState(false);
+  const [bossTopic, setBossTopic] = useState('Graphs & Dynamic Programming');
+  const [levelUpModalOpen, setLevelUpModalOpen] = useState(false);
+  const [showDialogueToast, setShowDialogueToast] = useState(true);
 
   const loadAllData = async () => {
     try {
@@ -167,6 +177,42 @@ export const App: React.FC = () => {
     loadAllData();
   };
 
+  const handleOpenBossRaid = (topic: string = "Graphs & Dynamic Programming") => {
+    setBossTopic(topic);
+    setBossModalOpen(true);
+  };
+
+  const handleBossVictory = (xpEarned: number, goldEarned: number) => {
+    if (profile) {
+      const nextXp = profile.xp + xpEarned;
+      const nextGold = profile.gold + goldEarned;
+      const nextLevel = profile.level + 1;
+      setProfile({
+        ...profile,
+        xp: nextXp,
+        gold: nextGold,
+        level: nextLevel
+      });
+      setLevelUpModalOpen(true);
+    }
+  };
+
+  const handleGuildMasterAction = (action: string) => {
+    if (action === 'boss') {
+      handleOpenBossRaid();
+    } else if (action === 'boost') {
+      setDialogue({
+        mood: 'motivation',
+        dialogue: '🔥 Focus Surge Activated! Eliminate all distractions. Your retention efficiency is heightened by +25%.'
+      });
+    } else if (action === 'lore') {
+      setDialogue({
+        mood: 'lore',
+        dialogue: '📜 Ancient Codex Lore: Greedy selection in Dijkstra guarantees shortest path optimality only when all edge weights are non-negative.'
+      });
+    }
+  };
+
   const getPageTitle = () => {
     switch (activeTab) {
       case 'overview': return 'Dashboard';
@@ -187,172 +233,244 @@ export const App: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#F7F2EA] text-[#2E241E] p-4 sm:p-6 lg:p-8 font-inter">
-      {/* 3D Clay Outer App Container matching Pinterest Dashboard */}
-      <div className="max-w-[1440px] mx-auto flex flex-col md:flex-row gap-6">
-        {/* Left 3D Sage Green Sidebar */}
-        <Sidebar
-          profile={profile}
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-          onOpenJudgeDeck={() => setJudgeDeckOpen(true)}
-          onSwitchHero={() => setIsLoggedIn(false)}
-        />
-
-        {/* Right Main Content Area */}
-        <div className="flex-1 flex flex-col space-y-6">
-          {/* Top 3D Navbar */}
-          <TopNavbar
-            pageTitle={getPageTitle()}
+    <FloatingLootProvider>
+      <div className="min-h-screen bg-[#F7F2EA] text-[#2E241E] p-4 sm:p-6 lg:p-8 font-inter">
+        {/* 3D Clay Outer App Container matching Pinterest Dashboard */}
+        <div className="max-w-[1440px] mx-auto flex flex-col md:flex-row gap-6">
+          {/* Left 3D Sage Green Sidebar */}
+          <Sidebar
             profile={profile}
-            audioEnabled={audioEnabled}
-            setAudioEnabled={setAudioEnabled}
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
             onOpenJudgeDeck={() => setJudgeDeckOpen(true)}
             onSwitchHero={() => setIsLoggedIn(false)}
-            onOpenProfile={() => setActiveTab('profile')}
           />
 
-          {/* Tab Views */}
-          <main className="flex-1">
-            {activeTab === 'overview' && (
-              <GuildHallOverview
-                profile={profile || ({} as StudentProfile)}
-                campaigns={campaigns}
-                quests={quests}
-                dialogue={dialogue}
-                onTakeQuiz={handleOpenQuiz}
-                onViewRemedial={handleOpenRemedial}
-                onCompleteQuest={handleCompleteQuest}
-                onNavigateTab={setActiveTab}
-              />
-            )}
+          {/* Right Main Content Area */}
+          <div className="flex-1 flex flex-col space-y-6">
+            {/* Top 3D Navbar */}
+            <TopNavbar
+              pageTitle={getPageTitle()}
+              profile={profile}
+              audioEnabled={audioEnabled}
+              setAudioEnabled={setAudioEnabled}
+              onOpenJudgeDeck={() => setJudgeDeckOpen(true)}
+              onSwitchHero={() => setIsLoggedIn(false)}
+              onOpenProfile={() => setActiveTab('profile')}
+              onOpenBossRaid={() => handleOpenBossRaid()}
+              onTriggerLevelUp={() => setLevelUpModalOpen(true)}
+            />
 
-            {activeTab === 'profile' && (
-              <AvatarProfileSection
-                profile={profile || ({} as StudentProfile)}
-                onProfileUpdated={loadAllData}
-              />
-            )}
+            {/* Tab Views */}
+            <main className="flex-1">
+              {activeTab === 'overview' && (
+                <GuildHallOverview
+                  profile={profile || ({} as StudentProfile)}
+                  campaigns={campaigns}
+                  quests={quests}
+                  dialogue={dialogue}
+                  onTakeQuiz={handleOpenQuiz}
+                  onViewRemedial={handleOpenRemedial}
+                  onCompleteQuest={handleCompleteQuest}
+                  onNavigateTab={setActiveTab}
+                  onOpenBossRaid={() => handleOpenBossRaid()}
+                  onSummonGuildMaster={() => setShowDialogueToast(true)}
+                />
+              )}
 
-            {activeTab === 'calendar' && (
-              <DynamicCalendarView
-                calendar={calendar}
-                onUpdateStatus={handleUpdateCalendarStatus}
-                onRegisterConflict={handleRegisterConflict}
-              />
-            )}
+              {activeTab === 'profile' && (
+                <AvatarProfileSection
+                  profile={profile || ({} as StudentProfile)}
+                  onProfileUpdated={loadAllData}
+                />
+              )}
 
-            {activeTab === 'diagnostic' && (
-              <div className="space-y-6 select-none">
-                <div className="clay-card-yellow p-6 rounded-[36px] border-4 border-white flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-2xl bg-white shadow-sm flex items-center justify-center text-2xl text-[#8B6810]">
-                      🧪
+              {activeTab === 'calendar' && (
+                <DynamicCalendarView
+                  calendar={calendar}
+                  onUpdateStatus={handleUpdateCalendarStatus}
+                  onRegisterConflict={handleRegisterConflict}
+                />
+              )}
+
+              {activeTab === 'diagnostic' && (
+                <div className="space-y-6 select-none">
+                  {/* Boss Fight CTA Card */}
+                  <div className="clay-card p-6 rounded-[36px] border-4 border-amber-400 bg-gradient-to-r from-[#201533] via-[#2F1D4A] to-[#1D1130] text-white flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl">
+                    <div className="flex items-center gap-4">
+                      <div className="w-14 h-14 rounded-2xl bg-red-600/30 border-2 border-red-400 flex items-center justify-center text-3xl shrink-0 animate-pulse">
+                        ⚔️
+                      </div>
+                      <div>
+                        <div className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-amber-300 bg-amber-500/20 px-2 py-0.5 rounded-full border border-amber-400/40 mb-1">
+                          Mythic Exam Encounter
+                        </div>
+                        <h3 className="text-lg font-black text-transparent bg-clip-text bg-gradient-to-r from-red-400 via-amber-300 to-yellow-300">
+                          Boss Raid Exam: Chronos The Titan
+                        </h3>
+                        <p className="text-xs text-amber-100/70 font-semibold">
+                          Engage in an epic combat trial with a real-time Boss HP bar and legendary relic drops!
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <h2 className="text-xl font-black text-[#3E2B08]">
-                        Diagnostic Quiz Trials
-                      </h2>
-                      <p className="text-xs font-semibold text-[#6E5014] mt-0.5">
-                        Test your algorithmic competence. Scoring below 60% automatically triggers timetable replanning.
-                      </p>
+
+                    <button
+                      onClick={() => handleOpenBossRaid()}
+                      className="px-6 py-3 rounded-2xl bg-gradient-to-r from-red-500 to-amber-500 hover:from-red-400 hover:to-amber-400 text-white font-black text-xs shadow-lg hover:scale-105 transition-all whitespace-nowrap"
+                    >
+                      Enter Boss Arena
+                    </button>
+                  </div>
+
+                  <div className="clay-card-yellow p-6 rounded-[36px] border-4 border-white flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-2xl bg-white shadow-sm flex items-center justify-center text-2xl text-[#8B6810]">
+                        🧪
+                      </div>
+                      <div>
+                        <h2 className="text-xl font-black text-[#3E2B08]">
+                          Diagnostic Quiz Trials
+                        </h2>
+                        <p className="text-xs font-semibold text-[#6E5014] mt-0.5">
+                          Test your algorithmic competence. Scoring below 60% automatically triggers timetable replanning.
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                  {[
-                    { topic: 'Graphs', subtopic: 'Dijkstras Algorithm', diff: 'Hard', icon: '⚡', desc: 'Shortest paths, priority queue mechanics, and negative cycle invariants.' },
-                    { topic: 'Graphs', subtopic: 'Breadth-First Search', diff: 'Easy', icon: '🌐', desc: 'Layered queue exploration and unweighted shortest paths.' },
-                    { topic: 'Dynamic Programming', subtopic: '1D DP Memoization', diff: 'Medium', icon: '💎', desc: 'Optimal substructure, overlapping subproblems, and state transitions.' },
-                    { topic: 'Systems', subtopic: 'Raft Consensus', diff: 'Hard', icon: '🛡️', desc: 'Leader election, log replication, and split-brain resolution.' }
-                  ].map((trial, idx) => (
-                    <div key={idx} className="clay-card p-6 rounded-[36px] border-4 border-white space-y-3 flex flex-col justify-between hover:scale-[1.01] transition-transform">
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-2xl p-2.5 rounded-2xl bg-[#F7F2EA] shadow-sm inline-block">{trial.icon}</span>
-                          <span className="text-[10px] font-black px-2.5 py-1 rounded-xl bg-[#FDECC8] text-[#735A22]">
-                            {trial.diff}
-                          </span>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                    {[
+                      { topic: 'Graphs', subtopic: 'Dijkstras Algorithm', diff: 'Hard', icon: '⚡', desc: 'Shortest paths, priority queue mechanics, and negative cycle invariants.' },
+                      { topic: 'Graphs', subtopic: 'Breadth-First Search', diff: 'Easy', icon: '🌐', desc: 'Layered queue exploration and unweighted shortest paths.' },
+                      { topic: 'Dynamic Programming', subtopic: '1D DP Memoization', diff: 'Medium', icon: '💎', desc: 'Optimal substructure, overlapping subproblems, and state transitions.' },
+                      { topic: 'Systems', subtopic: 'Raft Consensus', diff: 'Hard', icon: '🛡️', desc: 'Leader election, log replication, and split-brain resolution.' }
+                    ].map((trial, idx) => (
+                      <div key={idx} className="clay-card p-6 rounded-[36px] border-4 border-white space-y-3 flex flex-col justify-between hover:scale-[1.01] transition-transform">
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-2xl p-2.5 rounded-2xl bg-[#F7F2EA] shadow-sm inline-block">{trial.icon}</span>
+                            <span className="text-[10px] font-black px-2.5 py-1 rounded-xl bg-[#FDECC8] text-[#735A22]">
+                              {trial.diff}
+                            </span>
+                          </div>
+                          <h4 className="font-black text-sm text-[#2E241E]">{trial.subtopic}</h4>
+                          <p className="text-xs font-semibold text-[#8B7E74]">{trial.desc}</p>
                         </div>
-                        <h4 className="font-black text-sm text-[#2E241E]">{trial.subtopic}</h4>
-                        <p className="text-xs font-semibold text-[#8B7E74]">{trial.desc}</p>
+
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => handleOpenQuiz(trial.topic, trial.subtopic)}
+                            className="flex-1 clay-button-peach py-2.5 rounded-2xl text-xs font-black"
+                          >
+                            Standard Quiz
+                          </button>
+                          <button
+                            onClick={() => handleOpenBossRaid(trial.subtopic)}
+                            className="px-3 py-2.5 rounded-2xl bg-gradient-to-r from-red-500 to-rose-600 text-white text-xs font-black shadow-sm hover:scale-105 transition-transform"
+                            title="Fight as Boss Raid"
+                          >
+                            ⚔️
+                          </button>
+                        </div>
                       </div>
-
-                      <button
-                        onClick={() => handleOpenQuiz(trial.topic, trial.subtopic)}
-                        className="w-full clay-button-peach py-2.5 rounded-2xl text-xs font-black"
-                      >
-                        Launch Assessment Trial
-                      </button>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {activeTab === 'remedial' && (
-              <AdaptiveResourceHub
-                onTakeQuiz={handleOpenQuiz}
-                selectedSubtopic={selectedRemedialSubtopic}
-              />
-            )}
+              {activeTab === 'remedial' && (
+                <AdaptiveResourceHub
+                  onTakeQuiz={handleOpenQuiz}
+                  selectedSubtopic={selectedRemedialSubtopic}
+                />
+              )}
 
-            {activeTab === 'skills' && (
-              <SkillTreeView
-                skillNodes={skillNodes}
-                profile={profile || ({} as StudentProfile)}
-                onUpgradeSkill={handleUpgradeSkill}
-              />
-            )}
+              {activeTab === 'skills' && (
+                <SkillTreeView
+                  skillNodes={skillNodes}
+                  profile={profile || ({} as StudentProfile)}
+                  onUpgradeSkill={handleUpgradeSkill}
+                />
+              )}
 
-            {activeTab === 'rewards' && (
-              <RewardMarketplace
-                rewards={rewards}
-                profile={profile || ({} as StudentProfile)}
-                onRedeemReward={handleRedeemReward}
-                onAddCustomReward={handleAddCustomReward}
-              />
-            )}
+              {activeTab === 'rewards' && (
+                <RewardMarketplace
+                  rewards={rewards}
+                  profile={profile || ({} as StudentProfile)}
+                  onRedeemReward={handleRedeemReward}
+                  onAddCustomReward={handleAddCustomReward}
+                />
+              )}
 
-            {activeTab === 'wizard' && (
-              <SyllabusWizard
-                onSyllabusGenerated={() => {
-                  setActiveTab('overview');
-                  loadAllData();
-                }}
-              />
-            )}
+              {activeTab === 'wizard' && (
+                <SyllabusWizard
+                  onSyllabusGenerated={() => {
+                    setActiveTab('overview');
+                    loadAllData();
+                  }}
+                />
+              )}
 
-            {activeTab === 'logs' && (
-              <AgentThoughtLogView
-                logs={thoughtLogs}
-                onRefreshLogs={loadAllData}
-              />
-            )}
-          </main>
+              {activeTab === 'logs' && (
+                <AgentThoughtLogView
+                  logs={thoughtLogs}
+                  onRefreshLogs={loadAllData}
+                />
+              )}
+            </main>
+          </div>
         </div>
-      </div>
 
-      {/* Interactive Modals */}
-      {quizModalOpen && (
-        <QuizEngineModal
-          topic={quizTopic.topic}
-          subtopic={quizTopic.subtopic}
-          onClose={() => setQuizModalOpen(false)}
-          onQuizCompleted={loadAllData}
-          onViewRemedial={(sub) => {
-            setQuizModalOpen(false);
-            handleOpenRemedial(sub);
-          }}
+        {/* AI Guild Master Styled Dialogue Box Toast */}
+        {showDialogueToast && (
+          <GuildMasterDialogue
+            message={{
+              mood: (dialogue.mood as any) || 'tactical',
+              dialogue: dialogue.dialogue,
+              companionName: profile?.character_class ? `Sage (${profile.character_class})` : 'Sage Sylva'
+            }}
+            onDismiss={() => setShowDialogueToast(false)}
+            onActionClick={handleGuildMasterAction}
+          />
+        )}
+
+        {/* Interactive Modals */}
+        {quizModalOpen && (
+          <QuizEngineModal
+            topic={quizTopic.topic}
+            subtopic={quizTopic.subtopic}
+            onClose={() => setQuizModalOpen(false)}
+            onQuizCompleted={loadAllData}
+            onViewRemedial={(sub) => {
+              setQuizModalOpen(false);
+              handleOpenRemedial(sub);
+            }}
+          />
+        )}
+
+        {/* Boss Raid Exam Modal */}
+        <BossRaidExamModal
+          isOpen={bossModalOpen}
+          onClose={() => setBossModalOpen(false)}
+          onVictory={handleBossVictory}
+          bossTopic={bossTopic}
         />
-      )}
 
-      <JudgeDemoDeck
-        isOpen={judgeDeckOpen}
-        onClose={() => setJudgeDeckOpen(false)}
-        onSimulationTriggered={handleSimulationUpdate}
-      />
-    </div>
+        {/* Anime Level-Up Fullscreen Overlay */}
+        <LevelUpOverlay
+          isOpen={levelUpModalOpen}
+          onClose={() => setLevelUpModalOpen(false)}
+          newLevel={profile ? profile.level + 1 : 15}
+          newRank={profile?.rank ? `${profile.rank}-Rank Grand Scholar` : 'S-Rank Grand Scholar'}
+          characterClass={profile?.character_class || 'Spellblade Scholar'}
+        />
+
+        <JudgeDemoDeck
+          isOpen={judgeDeckOpen}
+          onClose={() => setJudgeDeckOpen(false)}
+          onSimulationTriggered={handleSimulationUpdate}
+        />
+      </div>
+    </FloatingLootProvider>
   );
 };

@@ -11,6 +11,8 @@ interface TopNavbarProps {
   onOpenJudgeDeck: () => void;
   onSwitchHero: () => void;
   onOpenProfile?: () => void;
+  onOpenBossRaid?: () => void;
+  onTriggerLevelUp?: () => void;
 }
 
 export const TopNavbar: React.FC<TopNavbarProps> = ({
@@ -20,7 +22,9 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
   setAudioEnabled,
   onOpenJudgeDeck,
   onSwitchHero,
-  onOpenProfile
+  onOpenProfile,
+  onOpenBossRaid,
+  onTriggerLevelUp
 }) => {
   const toggleAudio = () => {
     const next = !audioEnabled;
@@ -73,6 +77,30 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
           <span>🔥</span>
           <span>{profile?.streak_days || 0}d</span>
         </div>
+
+        {/* Boss Fight Action Button */}
+        {onOpenBossRaid && (
+          <button
+            onClick={onOpenBossRaid}
+            className="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-2xl bg-gradient-to-r from-red-500 to-rose-600 text-white text-xs font-black shadow-[0_4px_12px_rgba(239,68,68,0.3)] hover:scale-105 transition-all border border-white/40"
+            title="Launch Boss Raid Diagnostic Exam"
+          >
+            <span>⚔️</span>
+            <span>Boss Raid</span>
+          </button>
+        )}
+
+        {/* Level Up Splash Trigger */}
+        {onTriggerLevelUp && (
+          <button
+            onClick={onTriggerLevelUp}
+            className="hidden md:flex items-center gap-1.5 px-3 py-2 rounded-2xl bg-gradient-to-r from-amber-400 to-yellow-500 text-[#2B1B04] text-xs font-black shadow-[0_4px_12px_rgba(245,158,11,0.3)] hover:scale-105 transition-all border border-white/60"
+            title="Test Anime Level-Up Rank Ascension Screen"
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>Rank Up</span>
+          </button>
+        )}
 
         {/* Sound Toggle Button */}
         <button

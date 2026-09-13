@@ -2,10 +2,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
   Play, Pause, RotateCcw, Sparkles, Brain, BookOpen, CheckCircle2,
   AlertTriangle, ArrowRight, Star, Target, Flame, Coins, Clock,
-  Timer, TrendingUp, TrendingDown, Award, Zap, ShieldAlert, Palette, X
+  Timer, TrendingUp, TrendingDown, Award, Zap, ShieldAlert, Palette, X, Radio, Swords
 } from 'lucide-react';
 import { StudentProfile, Campaign, Quest, DialogueInfo } from '../../services/api';
 import { soundFX } from '../../utils/audioEffects';
+import { StudyRoomDesk } from './StudyRoomDesk';
+import { LoFiPlayerWidget } from '../audio/LoFiPlayerWidget';
+import { useFloatingLoot } from '../gamification/FloatingLootManager';
 
 interface GuildHallOverviewProps {
   profile: StudentProfile;
@@ -16,6 +19,8 @@ interface GuildHallOverviewProps {
   onViewRemedial: (subtopic: string) => void;
   onCompleteQuest: (questId: string) => void;
   onNavigateTab: (tab: string) => void;
+  onOpenBossRaid?: () => void;
+  onSummonGuildMaster?: () => void;
 }
 
 interface StrengthWeaknessReport {
@@ -41,8 +46,13 @@ export const GuildHallOverview: React.FC<GuildHallOverviewProps> = ({
   onTakeQuiz,
   onViewRemedial,
   onCompleteQuest,
-  onNavigateTab
+  onNavigateTab,
+  onOpenBossRaid,
+  onSummonGuildMaster
 }) => {
+  const { triggerLoot } = useFloatingLoot();
+  const [isLoFiOpen, setIsLoFiOpen] = useState(false);
+
   const activeCampaign = campaigns.find(c => c.id === profile.active_campaign_id) || campaigns[0];
   const remedialQuests = quests.filter(q => q.is_remedial && q.status !== 'completed');
   const activeQuests = quests.filter(q => !q.is_remedial && (q.status === 'in_progress' || q.status === 'pending')).slice(0, 3);
@@ -170,6 +180,9 @@ export const GuildHallOverview: React.FC<GuildHallOverviewProps> = ({
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
 
+    triggerLoot(`+${report.creditsEarned} XP Task Focus`, 'xp');
+    triggerLoot(`+${report.goldEarned} Gold Coins`, 'gold');
+
     setActiveReport(report);
     setRecentReports(prev => [report, ...prev].slice(0, 3));
     setTimerSeconds(0);
@@ -213,6 +226,31 @@ export const GuildHallOverview: React.FC<GuildHallOverviewProps> = ({
 
   return (
     <div className="space-y-6 pb-12 select-none">
+      {/* 0. Immersive Interactive Study Room Desk with Dynamic Day-to-Night & Warning Lamp */}
+      <StudyRoomDesk
+        onOpenCalendar={() => onNavigateTab('calendar')}
+        onOpenBossRaid={() => {
+          if (onOpenBossRaid) onOpenBossRaid();
+          else onTakeQuiz('Graphs', 'Dijkstras Algorithm');
+        }}
+        onOpenRewards={() => onNavigateTab('rewards')}
+        onTriggerFocusBoost={() => {
+          setIsTimerRunning(true);
+          setSelectedBenchmarkMin(25);
+        }}
+        onToggleLoFi={() => setIsLoFiOpen(!isLoFiOpen)}
+        onSummonGuildMaster={() => onSummonGuildMaster?.()}
+        warningActive={remedialQuests.length > 0}
+        warningReason={remedialQuests.length > 0 ? "Remedial Knowledge Gaps Detected in Graph Invariants" : undefined}
+      />
+
+      {/* Expandable Lo-Fi Cassette Player Deck */}
+      {isLoFiOpen && (
+        <div className="animate-fadeIn">
+          <LoFiPlayerWidget />
+        </div>
+      )}
+
       {/* 1. Hero Greeting Banner with Dynamic 3D Cartoon Avatar */}
       <div className="bg-[#FAD8C7] rounded-[38px] p-6 sm:p-7 border-4 border-white shadow-[0_15px_35px_rgba(235,139,104,0.18)] flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
         {/* Left: Interactive 3D Cartoon Avatar Presentation */}
@@ -273,7 +311,7 @@ export const GuildHallOverview: React.FC<GuildHallOverviewProps> = ({
           <div className="space-y-1.5 flex-1">
             <div className="flex items-center gap-2">
               <h2 className="text-xl sm:text-2xl font-black text-[#3E2318] tracking-tight">
-                Good Day, {profile.name.split(' ')[0]}! ☀️
+                Good Day, {(profile?.name || 'Scholar').split(' ')[0]}! ☀️
               </h2>
             </div>
             <p className="text-xs sm:text-sm font-semibold text-[#6E4230] leading-snug max-w-lg">

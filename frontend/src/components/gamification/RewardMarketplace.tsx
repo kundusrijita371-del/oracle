@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { Coins, Plus, Gift, ShoppingBag, X } from 'lucide-react';
+import { Coins, Plus, Gift, ShoppingBag, X, Flame, Sparkles, Shield, Zap } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { RewardItem, StudentProfile } from '../../services/api';
 import { soundFX } from '../../utils/audioEffects';
+import { StreakRevivalModal } from './StreakRevivalModal';
+import { useFloatingLoot } from './FloatingLootManager';
 
 interface RewardMarketplaceProps {
   rewards: RewardItem[];
@@ -17,8 +19,10 @@ export const RewardMarketplace: React.FC<RewardMarketplaceProps> = ({
   onRedeemReward,
   onAddCustomReward
 }) => {
+  const { triggerLoot } = useFloatingLoot();
   const [activeTab, setActiveTab] = useState<'all' | 'real_world' | 'in_game'>('all');
   const [modalOpen, setModalOpen] = useState(false);
+  const [revivalModalOpen, setRevivalModalOpen] = useState(false);
   const [customTitle, setCustomTitle] = useState('');
   const [customDesc, setCustomDesc] = useState('');
   const [customCost, setCustomCost] = useState(150);
@@ -31,12 +35,19 @@ export const RewardMarketplace: React.FC<RewardMarketplaceProps> = ({
 
   const handleRedeem = (item: RewardItem) => {
     if (profile.gold >= item.coin_cost) {
+      if (item.id === 'rew-shield' || item.title.toLowerCase().includes('revival') || item.title.toLowerCase().includes('streak')) {
+        setRevivalModalOpen(true);
+        return;
+      }
+
       soundFX.playCoin();
       confetti({
         particleCount: 50,
         spread: 60,
         origin: { y: 0.7 }
       });
+      triggerLoot(`-${item.coin_cost} Gold`, 'gold');
+      triggerLoot(`Claimed: ${item.title}`, 'item');
       onRedeemReward(item.id);
     } else {
       soundFX.playAlert();
@@ -92,6 +103,42 @@ export const RewardMarketplace: React.FC<RewardMarketplaceProps> = ({
           >
             <Plus className="w-4 h-4" />
             <span>Custom Reward</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Featured Alchemical Consumables: Potion of Revival */}
+      <div className="clay-card p-6 rounded-[36px] border-4 border-amber-300 shadow-xl bg-gradient-to-r from-[#FFF9F2] via-[#FFF3E3] to-[#FFEFE0] flex flex-col md:flex-row items-center justify-between gap-6">
+        <div className="flex items-center gap-4">
+          <div className="w-16 h-16 rounded-3xl bg-gradient-to-tr from-amber-500 to-rose-400 border-2 border-white shadow-lg flex items-center justify-center text-3xl animate-pulse shrink-0">
+            🧪
+          </div>
+          <div className="space-y-1">
+            <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-amber-500/20 border border-amber-400 text-amber-900 text-[10px] font-black uppercase tracking-wider">
+              <Flame className="w-3 h-3 text-amber-600 fill-amber-500" />
+              <span>Mythic Item • Streak Saver</span>
+            </div>
+            <h3 className="text-base font-black text-[#3E2318]">
+              Potion of Revival (Streak Saver)
+            </h3>
+            <p className="text-xs text-[#7A5A43] font-semibold max-w-lg">
+              Missed a study day? Drink the Phoenix Elixir to instantly restore and shield your <span className="font-bold text-[#3E2318]">{profile.streak_days || 14}-day study streak</span> from dying!
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3 shrink-0">
+          <div className="text-right">
+            <span className="text-[10px] font-bold text-[#8B7E74]">Cost</span>
+            <div className="text-base font-black text-amber-700">150 🪙</div>
+          </div>
+
+          <button
+            onClick={() => setRevivalModalOpen(true)}
+            className="clay-button-peach px-5 py-3 rounded-2xl text-xs font-black flex items-center gap-2 shadow-lg"
+          >
+            <Sparkles className="w-4 h-4" />
+            <span>Uncork Revival Potion</span>
           </button>
         </div>
       </div>
@@ -254,6 +301,17 @@ export const RewardMarketplace: React.FC<RewardMarketplaceProps> = ({
           </div>
         </div>
       )}
+
+      {/* Streak Revival Modal */}
+      <StreakRevivalModal
+        isOpen={revivalModalOpen}
+        onClose={() => setRevivalModalOpen(false)}
+        gold={profile.gold}
+        streakDays={profile.streak_days || 14}
+        onReviveStreak={(cost) => {
+          onRedeemReward('rew-shield');
+        }}
+      />
     </div>
   );
 };
