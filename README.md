@@ -16,7 +16,7 @@ Wrapped in an immersive **LifeRPG gamification layer**, Oracle keeps students mo
 
 ---
 
-<h1>## 🤖 The Autonomous Agent Engine (The Core Logic)</h1>
+## 🤖 The Autonomous Agent Engine (The Core Logic)
 Oracle doesn't just store calendar events; it thinks and adapts like a personal AI tutor:
 * **Diagnostic Engine:** Automatically evaluates quiz results from a synthetic LMS or question bank to flag sub-topics below mastery thresholds (e.g., scores $<60\%$).
 * **Educational RAG Pipeline:** Fetches targeted remedial learning materials (articles, video snippets, and practice sets) tailored precisely to the student's identified weaknesses.
@@ -52,6 +52,8 @@ To maximize student engagement and make studying addictive, Oracle integrates co
 * **AI Core:** LangGraph / custom state machines integrated with advanced LLMs for real-time scheduling and RAG retrieval
 
 ---
+
+project link :-
 
 ## 🚀 Getting Started
 
