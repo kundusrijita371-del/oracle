@@ -53,7 +53,7 @@ To maximize student engagement and make studying addictive, Oracle integrates co
 
 ---
 
-<h2>📌 Project link: https ://liferpg-subham-539.firebaseapp.com/</h2><br>
+<h2>📌 Project link: https : //liferpg-subham-539.firebaseapp.com/ </h2><br>
 <h2>📌 Project Demo link : https://drive.google.com/file/d/11Q9US9X14MZ9b5umeLwjGDzHx9cMAHrk/view?usp=drivesdk</h2><br>
 
 ## 🚀 Getting Started
